@@ -26,7 +26,7 @@
 
 ## 3. 기술 스택
 
-- Next.js 15 (App Router) + TypeScript
+- Next.js 16 (App Router) + TypeScript
 - Supabase (Auth, Postgres, RLS)
 - Tailwind CSS + shadcn/ui (템플릿 내장)
 

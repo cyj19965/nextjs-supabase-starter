@@ -1,6 +1,6 @@
 # 오늘의 뜨개 (My Knitting Counter)
 
-Next.js 15 + Supabase(Auth/Postgres/RLS) 기반의 뜨개질 단수 카운터·진행률 트래커.
+Next.js 16 + Supabase(Auth/Postgres/RLS) 기반의 뜨개질 단수 카운터·진행률 트래커.
 
 ## Project Context
 
