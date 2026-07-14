@@ -11,18 +11,23 @@ export async function AuthButton() {
 
   const user = data?.claims;
 
+  const nickname = (user?.user_metadata as { nickname?: string } | undefined)?.nickname;
+
   return user ? (
-    <div className="flex items-center gap-4">
-      Hey, {user.email}!
+    <div className="flex min-w-0 items-center gap-3">
+      {/* Greeting stays compact and hides on phones so the logo never wraps */}
+      <span className="hidden max-w-48 truncate text-sm text-muted-foreground sm:inline">
+        {nickname ? `${nickname}님 🧶` : user.email}
+      </span>
       <LogoutButton />
     </div>
   ) : (
-    <div className="flex gap-2">
+    <div className="flex shrink-0 gap-2">
       <Button asChild size="sm" variant={"outline"}>
-        <Link href="/auth/login">Sign in</Link>
+        <Link href="/auth/login">로그인</Link>
       </Button>
       <Button asChild size="sm" variant={"default"}>
-        <Link href="/auth/sign-up">Sign up</Link>
+        <Link href="/auth/sign-up">가입하기</Link>
       </Button>
     </div>
   );

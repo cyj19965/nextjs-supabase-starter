@@ -21,6 +21,7 @@ export function SignUpForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
+  const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +46,7 @@ export function SignUpForm({
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/projects`,
+          data: { nickname: nickname.trim().slice(0, 20) },
         },
       });
       if (error) throw error;
@@ -75,6 +77,18 @@ export function SignUpForm({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nickname">닉네임</Label>
+                <Input
+                  id="nickname"
+                  type="text"
+                  placeholder="예: 뜨개하는 낮달"
+                  required
+                  maxLength={20}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">

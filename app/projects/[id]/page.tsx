@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +26,31 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
   if (error || !data?.claims) redirect('/auth/login');
 
   const project = await getProject(id);
-  if (!project) notFound();
+  // Stale links (e.g. a tab left open after deletion) get a friendly notice
+  // instead of a bare 404. RLS also lands here for other users' projects.
+  if (!project) {
+    return (
+      <div className="mx-auto w-full max-w-lg space-y-4 p-5">
+        <Link href="/projects" className="text-sm text-muted-foreground hover:underline">
+          ← 목록으로
+        </Link>
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+            <p className="text-5xl" aria-hidden>
+              🧺
+            </p>
+            <p className="font-semibold">삭제되었거나 찾을 수 없는 작품이에요</p>
+            <p className="text-sm text-muted-foreground">
+              다른 곳에서 이미 정리한 작품일 수 있어요.
+            </p>
+            <Button asChild>
+              <Link href="/projects">내 작품 목록 보기</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const facts: Array<[string, string]> = [];
   if (project.kind) facts.push(['종류', project.kind]);
