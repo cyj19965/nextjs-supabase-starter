@@ -25,15 +25,40 @@ async function ProjectsContent() {
   if (error || !data?.claims) redirect('/auth/login');
 
   const projects = await getProjects();
+  const countOf = (status: string) => projects.filter((p) => p.status === status).length;
+  const statusChips: Array<[string, string, number]> = [
+    ['🧶', '진행중', countOf('진행중')],
+    ['🎉', '완성', countOf('완성')],
+    ['💤', '잠듦', countOf('잠듦')],
+  ];
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">🧶 내 뜨개 작품</h1>
-        <Button asChild>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold">🧶 내 뜨개 작품</h1>
+          <p className="text-sm text-muted-foreground">오늘도 한 단, 이어서 떠볼까요?</p>
+        </div>
+        <Button asChild className="rounded-full">
           <Link href="/projects/new">+ 새 작품</Link>
         </Button>
       </div>
+
+      {projects.length > 0 && (
+        <div className="flex flex-wrap gap-2 text-sm">
+          {statusChips.map(([emoji, label, count]) => (
+            <span
+              key={label}
+              className={
+                'rounded-full px-3.5 py-1 ' +
+                (count > 0 ? 'bg-secondary' : 'bg-secondary/40 text-muted-foreground')
+              }
+            >
+              {emoji} {label} {count}
+            </span>
+          ))}
+        </div>
+      )}
 
       {projects.length === 0 ? (
         <Card>
