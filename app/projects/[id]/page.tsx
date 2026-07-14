@@ -4,9 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { DeleteLogButton } from '@/components/delete-log-button';
 import { GoalCelebration } from '@/components/goal-celebration';
+import { PhotoLogForm } from '@/components/photo-log-form';
 import { ProgressBar } from '@/components/progress-bar';
-import { PROJECT_STATUSES, getProject, progressOf } from '@/lib/projects';
+import { PROJECT_STATUSES, getProject, getProjectLogs, photoUrl, progressOf } from '@/lib/projects';
 import { createClient } from '@/lib/supabase/server';
 import { adjustRows, deleteProject, setRows, setStatus } from '../actions';
 import { Suspense } from 'react';
@@ -26,7 +28,7 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) redirect('/auth/login');
 
-  const project = await getProject(id);
+  const [project, logs] = await Promise.all([getProject(id), getProjectLogs(id)]);
   // Stale links (e.g. a tab left open after deletion) get a friendly notice
   // instead of a bare 404. RLS also lands here for other users' projects.
   if (!project) {
@@ -173,6 +175,41 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
               이 작품 삭제
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">📸 뜨개 기록</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <PhotoLogForm projectId={project.id} />
+          {logs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              아직 기록이 없어요. 지금 모습을 남겨두면 완성했을 때 처음이 더 뭉클해요.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {logs.map((log) => (
+                <figure key={log.id} className="space-y-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photoUrl(log.photo_path)}
+                    alt={log.caption ?? '뜨개 기록 사진'}
+                    className="aspect-square w-full rounded-xl object-cover"
+                    loading="lazy"
+                  />
+                  <figcaption className="space-y-0.5 px-0.5">
+                    {log.caption && <p className="text-sm leading-snug">{log.caption}</p>}
+                    <p className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{log.created_at.slice(0, 10)}</span>
+                      <DeleteLogButton logId={log.id} photoPath={log.photo_path} />
+                    </p>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
