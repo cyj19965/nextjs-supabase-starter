@@ -46,33 +46,41 @@ export function ForgotPasswordForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Link href="/" className="text-center font-semibold">
+        🧶 오늘의 뜨개
+      </Link>
       {success ? (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
+          <CardHeader className="text-center">
+            <p className="text-4xl" aria-hidden>
+              💌
+            </p>
+            <CardTitle className="text-2xl">메일함을 확인해주세요</CardTitle>
+            <CardDescription>재설정 안내를 보냈어요</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive
-              a password reset email.
+              가입하신 이메일이 맞다면 비밀번호 재설정 메일이 도착해요. 스팸함도
+              한번 확인해주세요.
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+          <CardHeader className="text-center">
+            <p className="text-4xl" aria-hidden>
+              🔑
+            </p>
+            <CardTitle className="text-2xl">비밀번호 재설정</CardTitle>
             <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your
-              password
+              이메일을 알려주시면 재설정 링크를 보내드려요
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">이메일</Label>
                   <Input
                     id="email"
                     type="email"
@@ -82,18 +90,18 @@ export function ForgotPasswordForm({
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
+                {error && <p className="text-sm text-destructive">{error}</p>}
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset email"}
+                  {isLoading ? "보내는 중..." : "재설정 메일 보내기"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
+                비밀번호가 기억났나요?{" "}
                 <Link
                   href="/auth/login"
-                  className="underline underline-offset-4"
+                  className="font-medium text-primary underline underline-offset-4"
                 >
-                  Login
+                  로그인
                 </Link>
               </div>
             </form>

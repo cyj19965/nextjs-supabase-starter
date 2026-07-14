@@ -35,7 +35,7 @@ export function SignUpForm({
     setError(null);
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match");
+      setError("비밀번호가 서로 달라요.");
       setIsLoading(false);
       return;
     }
@@ -52,7 +52,11 @@ export function SignUpForm({
       if (error) throw error;
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "가입에 실패했어요. 잠시 후 다시 시도해주세요.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -60,16 +64,22 @@ export function SignUpForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Link href="/" className="text-center font-semibold">
+        🧶 오늘의 뜨개
+      </Link>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+        <CardHeader className="text-center">
+          <p className="text-4xl" aria-hidden>
+            🌱
+          </p>
+          <CardTitle className="text-2xl">뜨개 시작하기</CardTitle>
+          <CardDescription>계정을 만들고 첫 코를 잡아보세요</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">이메일</Label>
                 <Input
                   id="email"
                   type="email"
@@ -93,37 +103,42 @@ export function SignUpForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">비밀번호</Label>
                 </div>
                 <Input
                   id="password"
                   type="password"
                   required
+                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
+                  <Label htmlFor="repeat-password">비밀번호 확인</Label>
                 </div>
                 <Input
                   id="repeat-password"
                   type="password"
                   required
+                  minLength={6}
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+                {isLoading ? "계정 만드는 중..." : "가입하기"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
-                Login
+              이미 계정이 있나요?{" "}
+              <Link
+                href="/auth/login"
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                로그인
               </Link>
             </div>
           </form>
