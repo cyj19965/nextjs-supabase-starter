@@ -16,9 +16,21 @@ export async function AuthButton() {
   return user ? (
     <div className="flex min-w-0 items-center gap-3">
       {/* Greeting stays compact and hides on phones so the logo never wraps */}
-      <span className="hidden max-w-48 truncate text-sm text-muted-foreground sm:inline">
+      <Link
+        href="/settings"
+        className="hidden max-w-48 truncate text-sm text-muted-foreground hover:underline sm:inline"
+        title="계정 설정"
+      >
         {nickname ? `${nickname}님 🧶` : user.email}
-      </span>
+      </Link>
+      <Link
+        href="/settings"
+        className="text-lg sm:hidden"
+        aria-label="계정 설정"
+        title="계정 설정"
+      >
+        ⚙️
+      </Link>
       <LogoutButton />
     </div>
   ) : (
