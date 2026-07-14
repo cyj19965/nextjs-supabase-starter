@@ -11,15 +11,20 @@ import { createClient } from '@/lib/supabase/server';
 const STATUS_EMOJI: Record<string, string> = { 진행중: '🧶', 완성: '🎉', 잠듦: '💤' };
 
 // cacheComponents mode: uncached (auth-scoped) data must render inside Suspense
-export default function ProjectsPage() {
+export default function ProjectsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
   return (
     <Suspense>
-      <ProjectsContent />
+      <ProjectsContent searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function ProjectsContent() {
+async function ProjectsContent({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  const { status: activeStatus } = await searchParams;
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) redirect('/auth/login');
@@ -31,6 +36,7 @@ async function ProjectsContent() {
     ['🎉', '완성', countOf('완성')],
     ['💤', '잠듦', countOf('잠듦')],
   ];
+  const filtered = activeStatus ? projects.filter((p) => p.status === activeStatus) : projects;
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-5">
@@ -46,18 +52,35 @@ async function ProjectsContent() {
 
       {projects.length > 0 && (
         <div className="flex flex-wrap gap-2 text-sm">
-          {statusChips.map(([emoji, label, count]) => (
-            <span
-              key={label}
-              className={
-                'rounded-full px-3.5 py-1 ' +
-                (count > 0 ? 'bg-secondary' : 'bg-secondary/40 text-muted-foreground')
-              }
-            >
-              {emoji} {label} {count}
-            </span>
-          ))}
+          {statusChips.map(([emoji, label, count]) => {
+            const isActive = activeStatus === label;
+            return (
+              <Link
+                key={label}
+                // Clicking the active chip clears the filter
+                href={isActive ? '/projects' : `/projects?status=${encodeURIComponent(label)}`}
+                className={
+                  'rounded-full px-3.5 py-1 transition ' +
+                  (isActive
+                    ? 'bg-primary font-semibold text-primary-foreground'
+                    : count > 0
+                      ? 'bg-secondary hover:bg-secondary/70'
+                      : 'bg-secondary/40 text-muted-foreground hover:bg-secondary/70')
+                }
+              >
+                {emoji} {label} {count}
+              </Link>
+            );
+          })}
         </div>
+      )}
+
+      {activeStatus && filtered.length === 0 && (
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            {activeStatus} 상태의 작품이 없어요.
+          </CardContent>
+        </Card>
       )}
 
       {projects.length === 0 ? (
@@ -68,7 +91,7 @@ async function ProjectsContent() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {projects.map((p) => (
+          {filtered.map((p) => (
             <Link key={p.id} href={`/projects/${p.id}`}>
               <Card className="h-full transition hover:-translate-y-0.5 hover:shadow-md">
                 <CardHeader className="pb-2">

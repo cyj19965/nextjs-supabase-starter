@@ -121,6 +121,36 @@ export async function setRows(formData: FormData) {
   revalidatePath('/projects');
 }
 
+/** Changes goal_rows; an empty value removes the goal. */
+export async function setGoal(formData: FormData) {
+  const id = requireId(formData.get('id'));
+  const raw = formData.get('goal');
+  if (typeof raw !== 'string') return;
+  const trimmed = raw.trim();
+  const goal = trimmed === '' ? null : parseInt(trimmed, 10);
+  if (goal !== null && (!Number.isInteger(goal) || goal < 1 || goal > 100000)) return;
+
+  const { supabase } = await requireUser();
+  const { data: current, error: selErr } = await supabase
+    .from('projects')
+    .select('current_rows, status')
+    .eq('id', id)
+    .maybeSingle();
+  if (selErr || !current) return;
+
+  // Re-evaluate completion against the new goal (e.g. lowering it below
+  // the current rows finishes the project)
+  const update = counterUpdate(current.current_rows, goal, current.status);
+  const { error } = await supabase
+    .from('projects')
+    .update({ ...update, goal_rows: goal })
+    .eq('id', id);
+  if (error) throw new Error(`goal update failed: ${error.message}`);
+
+  revalidatePath(`/projects/${id}`);
+  revalidatePath('/projects');
+}
+
 export async function setStatus(formData: FormData) {
   const id = requireId(formData.get('id'));
   const status = formData.get('status');

@@ -9,7 +9,13 @@ import { useRef, useState } from 'react';
 
 const MAX_FILE_MB = 5;
 
-export function PhotoLogForm({ projectId }: { projectId: string }) {
+export function PhotoLogForm({
+  projectId,
+  currentRows,
+}: {
+  projectId: string;
+  currentRows: number;
+}) {
   const [caption, setCaption] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -51,6 +57,7 @@ export function PhotoLogForm({ projectId }: { projectId: string }) {
           user_id: userId,
           photo_path: path,
           caption: trimmedCaption,
+          rows_at: currentRows,
         });
         if (insertError) throw insertError;
       }
@@ -70,6 +77,9 @@ export function PhotoLogForm({ projectId }: { projectId: string }) {
       <div className="space-y-1.5">
         <Label htmlFor="photos">사진 (여러 장 가능)</Label>
         <Input id="photos" ref={fileRef} type="file" accept="image/*" multiple required />
+        <p className="text-xs text-muted-foreground">
+          지금 단수(🧶 {currentRows}단)가 함께 기록돼요.
+        </p>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="caption">그때의 상황 (선택)</Label>

@@ -54,6 +54,7 @@ export interface ProjectLog {
   user_id: string;
   photo_path: string;
   caption: string | null;
+  rows_at: number | null;
   created_at: string;
 }
 

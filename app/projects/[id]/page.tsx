@@ -10,7 +10,7 @@ import { PhotoLogForm } from '@/components/photo-log-form';
 import { ProgressBar } from '@/components/progress-bar';
 import { PROJECT_STATUSES, getProject, getProjectLogs, photoUrl, progressOf } from '@/lib/projects';
 import { createClient } from '@/lib/supabase/server';
-import { adjustRows, deleteProject, setRows, setStatus } from '../actions';
+import { adjustRows, deleteProject, setGoal, setRows, setStatus } from '../actions';
 import { Suspense } from 'react';
 
 // cacheComponents mode: uncached (auth-scoped) data must render inside Suspense
@@ -115,7 +115,7 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
                 </Button>
               </form>
             </div>
-            <form action={setRows} className="mx-auto flex max-w-48 items-center gap-2 pt-1">
+            <form action={setRows} className="mx-auto flex max-w-56 items-center gap-2 pt-1">
               <input type="hidden" name="id" value={project.id} />
               <Input
                 name="rows"
@@ -125,8 +125,22 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
                 aria-label="단수 직접 입력"
                 className="h-8 text-center"
               />
-              <Button type="submit" variant="ghost" size="sm">
-                직접 입력
+              <Button type="submit" variant="ghost" size="sm" className="shrink-0">
+                단수 입력
+              </Button>
+            </form>
+            <form action={setGoal} className="mx-auto flex max-w-56 items-center gap-2">
+              <input type="hidden" name="id" value={project.id} />
+              <Input
+                name="goal"
+                type="number"
+                min={1}
+                placeholder={project.goal_rows ? `${project.goal_rows}` : '목표 없음'}
+                aria-label="목표 단수 수정 (비우면 목표 제거)"
+                className="h-8 text-center"
+              />
+              <Button type="submit" variant="ghost" size="sm" className="shrink-0">
+                목표 수정
               </Button>
             </form>
             <ProgressBar percent={progressOf(project)} />
@@ -183,7 +197,7 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
           <CardTitle className="text-base">📸 뜨개 기록</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <PhotoLogForm projectId={project.id} />
+          <PhotoLogForm projectId={project.id} currentRows={project.current_rows} />
           {logs.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               아직 기록이 없어요. 지금 모습을 남겨두면 완성했을 때 처음이 더 뭉클해요.
@@ -202,7 +216,12 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
                   <figcaption className="space-y-0.5 px-0.5">
                     {log.caption && <p className="text-sm leading-snug">{log.caption}</p>}
                     <p className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{log.created_at.slice(0, 10)}</span>
+                      <span>
+                        {log.rows_at !== null && (
+                          <span className="font-semibold text-primary">🧶 {log.rows_at}단 · </span>
+                        )}
+                        {log.created_at.slice(0, 10)}
+                      </span>
                       <DeleteLogButton logId={log.id} photoPath={log.photo_path} />
                     </p>
                   </figcaption>
