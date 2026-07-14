@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminClaims } from "@/lib/admin";
 import { LogoutButton } from "./logout-button";
 
 export async function AuthButton() {
@@ -12,9 +13,18 @@ export async function AuthButton() {
   const user = data?.claims;
 
   const nickname = (user?.user_metadata as { nickname?: string } | undefined)?.nickname;
+  const admin = isAdminClaims(user);
 
   return user ? (
     <div className="flex min-w-0 items-center gap-3">
+      {admin && (
+        <Link
+          href="/admin"
+          className="shrink-0 text-sm font-medium text-primary hover:underline"
+        >
+          🛠️ 관리
+        </Link>
+      )}
       {/* Greeting stays compact and hides on phones so the logo never wraps */}
       <Link
         href="/settings"
