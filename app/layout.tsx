@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Gowun_Dodum } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -9,12 +9,13 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "오늘의 뜨개 — 뜨개질 단수 카운터",
+  description: "뜨개질 작품별 단수 카운터와 진행률을 기록하는 뜨개인 전용 트래커",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Soft rounded Korean face to match the handmade mood (single 400 weight)
+const gowunDodum = Gowun_Dodum({
+  weight: "400",
   display: "swap",
   subsets: ["latin"],
 });
@@ -25,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+    <html lang="ko" suppressHydrationWarning>
+      <body className={`${gowunDodum.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

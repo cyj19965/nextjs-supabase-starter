@@ -4,13 +4,15 @@ export function ProgressBar({ percent }: { percent: number | null }) {
   }
   return (
     <div className="space-y-1">
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
         <div
-          className={`h-full rounded-full transition-all ${percent >= 100 ? 'bg-emerald-500' : 'bg-rose-400'}`}
+          className={`h-full rounded-full transition-all ${percent >= 100 ? 'bg-emerald-500' : 'bg-primary'}`}
           style={{ width: `${percent}%` }}
         />
       </div>
-      <p className="text-xs text-muted-foreground">{percent}%</p>
+      <p className="text-xs text-muted-foreground">
+        {percent >= 100 ? '🎉 목표 달성!' : `${percent}%`}
+      </p>
     </div>
   );
 }

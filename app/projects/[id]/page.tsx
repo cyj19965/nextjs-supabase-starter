@@ -51,9 +51,11 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Counter — the heart of the app */}
-          <div className="space-y-3 rounded-xl bg-muted/50 p-5 text-center">
+          <div className="space-y-3 rounded-3xl bg-secondary/60 p-6 text-center">
             <p className="text-sm text-muted-foreground">현재 단수</p>
-            <p className="text-6xl font-extrabold tabular-nums">{project.current_rows}</p>
+            <p className="text-7xl font-extrabold tabular-nums text-primary">
+              {project.current_rows}
+            </p>
             {project.goal_rows && (
               <p className="text-sm text-muted-foreground">목표 {project.goal_rows}단</p>
             )}
@@ -61,14 +63,24 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
               <form action={adjustRows}>
                 <input type="hidden" name="id" value={project.id} />
                 <input type="hidden" name="delta" value="-1" />
-                <Button type="submit" variant="outline" size="lg" aria-label="1단 빼기">
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="lg"
+                  className="h-14 w-14 rounded-full text-lg"
+                  aria-label="1단 빼기"
+                >
                   −1
                 </Button>
               </form>
               <form action={adjustRows}>
                 <input type="hidden" name="id" value={project.id} />
                 <input type="hidden" name="delta" value="1" />
-                <Button type="submit" size="lg" className="px-10 text-lg font-bold">
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="h-14 rounded-full px-12 text-xl font-bold shadow-md transition active:scale-95"
+                >
                   +1단 🧶
                 </Button>
               </form>
