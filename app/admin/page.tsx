@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteUserButton } from '@/components/admin/delete-user-button';
+import { RoleButton } from '@/components/admin/role-button';
 import { getAdminData, requireAdmin } from '@/lib/admin';
 
 // cacheComponents mode: uncached (auth-scoped) data must render inside Suspense
@@ -20,6 +21,7 @@ function formatDate(iso: string | null): string {
 async function AdminContent() {
   const callerId = await requireAdmin();
   const { users, stats } = await getAdminData();
+  const adminCount = users.filter((u) => u.isAdmin).length;
 
   const statCards: Array<[string, number]> = [
     ['전체 회원', stats.userCount],
@@ -62,8 +64,22 @@ async function AdminContent() {
                   가입 {formatDate(u.createdAt)} · 최근 접속 {formatDate(u.lastSignInAt)} · 작품{' '}
                   {u.projectCount}개
                 </p>
+                {u.isAdmin && !(adminCount === 1 && u.isAdmin) && u.id !== callerId && (
+                  <p className="text-xs text-muted-foreground">
+                    관리자는 해제한 뒤에 삭제할 수 있어요
+                  </p>
+                )}
               </div>
-              {u.id !== callerId && <DeleteUserButton userId={u.id} email={u.email} />}
+              <div className="flex flex-wrap items-center gap-2">
+                <RoleButton
+                  userId={u.id}
+                  isAdmin={u.isAdmin}
+                  isLastAdmin={u.isAdmin && adminCount === 1}
+                />
+                {u.id !== callerId && !u.isAdmin && (
+                  <DeleteUserButton userId={u.id} email={u.email} />
+                )}
+              </div>
             </div>
           ))}
         </CardContent>
