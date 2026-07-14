@@ -1,6 +1,6 @@
-# 우리동네 맛집 기록장
+# 오늘의 뜨개 (My Knitting Counter)
 
-Next.js 15 + Supabase(Auth/Postgres/RLS) 기반의 개인 맛집 기록 서비스.
+Next.js 15 + Supabase(Auth/Postgres/RLS) 기반의 뜨개질 단수 카운터·진행률 트래커.
 
 ## Project Context
 
