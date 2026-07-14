@@ -53,6 +53,24 @@ export async function createProject(formData: FormData) {
   redirect(`/projects/${data.id}`);
 }
 
+/**
+ * Reaching the goal marks the project 완성 automatically; dropping back
+ * below it (e.g. after a −1 fix) returns it to 진행중. Manually chosen
+ * 잠듦 is left alone.
+ */
+function counterUpdate(
+  next: number,
+  goal: number | null,
+  status: string,
+): { current_rows: number; status?: string } {
+  const update: { current_rows: number; status?: string } = { current_rows: next };
+  if (goal) {
+    if (next >= goal && status === '진행중') update.status = '완성';
+    else if (next < goal && status === '완성') update.status = '진행중';
+  }
+  return update;
+}
+
 /** Counter core: clamps at 0, ignores unknown deltas. */
 export async function adjustRows(formData: FormData) {
   const id = requireId(formData.get('id'));
@@ -63,13 +81,16 @@ export async function adjustRows(formData: FormData) {
   const { supabase } = await requireUser();
   const { data: current, error: selErr } = await supabase
     .from('projects')
-    .select('current_rows')
+    .select('current_rows, goal_rows, status')
     .eq('id', id)
     .maybeSingle();
   if (selErr || !current) return; // not mine (RLS) or gone
 
   const next = Math.max(0, current.current_rows + delta);
-  const { error } = await supabase.from('projects').update({ current_rows: next }).eq('id', id);
+  const { error } = await supabase
+    .from('projects')
+    .update(counterUpdate(next, current.goal_rows, current.status))
+    .eq('id', id);
   if (error) throw new Error(`counter update failed: ${error.message}`);
 
   revalidatePath(`/projects/${id}`);
@@ -83,7 +104,17 @@ export async function setRows(formData: FormData) {
   if (!Number.isInteger(rows) || rows < 0 || rows > 100000) return;
 
   const { supabase } = await requireUser();
-  const { error } = await supabase.from('projects').update({ current_rows: rows }).eq('id', id);
+  const { data: current, error: selErr } = await supabase
+    .from('projects')
+    .select('goal_rows, status')
+    .eq('id', id)
+    .maybeSingle();
+  if (selErr || !current) return;
+
+  const { error } = await supabase
+    .from('projects')
+    .update(counterUpdate(rows, current.goal_rows, current.status))
+    .eq('id', id);
   if (error) throw new Error(`rows update failed: ${error.message}`);
 
   revalidatePath(`/projects/${id}`);

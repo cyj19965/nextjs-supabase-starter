@@ -1,23 +1,13 @@
-import { AuthButton } from "@/components/auth-button";
+import { SiteNav } from "@/components/site-nav";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Suspense } from "react";
 
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <Link href="/" className="shrink-0 whitespace-nowrap font-semibold">
-              🧶 오늘의 뜨개
-            </Link>
-            <Suspense>
-              <AuthButton />
-            </Suspense>
-          </div>
-        </nav>
+        <SiteNav />
 
         <div className="flex w-full max-w-2xl flex-col items-center gap-16 p-8 pt-16 text-center">
           {/* Hero */}

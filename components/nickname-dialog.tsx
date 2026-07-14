@@ -1,15 +1,21 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { suggestNickname } from '@/lib/nickname';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /** Shown to signed-in users who joined before nicknames existed. */
 export function NicknameDialog() {
   const [nickname, setNickname] = useState('');
+  // Randomized after mount — prerender may not call Math.random()
+  const [nicknameExample, setNicknameExample] = useState('포근한 실타래 27');
+  useEffect(() => {
+    setNicknameExample(suggestNickname());
+  }, []);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -60,7 +66,7 @@ export function NicknameDialog() {
               autoFocus
               required
               maxLength={20}
-              placeholder="예: 뜨개하는 낮달"
+              placeholder={`예: ${nicknameExample}`}
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
             />

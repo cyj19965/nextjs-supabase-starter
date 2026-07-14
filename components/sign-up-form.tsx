@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { suggestNickname } from "@/lib/nickname";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function SignUpForm({
   className,
@@ -22,6 +23,11 @@ export function SignUpForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [nickname, setNickname] = useState("");
+  // Randomized after mount — prerender may not call Math.random()
+  const [nicknameExample, setNicknameExample] = useState("포근한 실타래 27");
+  useEffect(() => {
+    setNicknameExample(suggestNickname());
+  }, []);
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +100,7 @@ export function SignUpForm({
                 <Input
                   id="nickname"
                   type="text"
-                  placeholder="예: 뜨개하는 낮달"
+                  placeholder={`예: ${nicknameExample}`}
                   required
                   maxLength={20}
                   value={nickname}

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { GoalCelebration } from '@/components/goal-celebration';
 import { ProgressBar } from '@/components/progress-bar';
 import { PROJECT_STATUSES, getProject, progressOf } from '@/lib/projects';
 import { createClient } from '@/lib/supabase/server';
@@ -52,6 +53,8 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
     );
   }
 
+  const goalReached = !!(project.goal_rows && project.current_rows >= project.goal_rows);
+
   const facts: Array<[string, string]> = [];
   if (project.kind) facts.push(['종류', project.kind]);
   if (project.yarn) facts.push(['실', project.yarn]);
@@ -74,6 +77,7 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <GoalCelebration projectId={project.id} reached={goalReached} />
           {/* Counter — the heart of the app */}
           <div className="space-y-3 rounded-3xl bg-secondary/60 p-6 text-center">
             <p className="text-sm text-muted-foreground">현재 단수</p>
