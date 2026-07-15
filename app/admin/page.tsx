@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BanButton } from '@/components/admin/ban-button';
 import { DeleteUserButton } from '@/components/admin/delete-user-button';
 import { RoleButton } from '@/components/admin/role-button';
 import { getAdminData, requireAdmin } from '@/lib/admin';
@@ -58,6 +59,7 @@ async function AdminContent() {
                 <p className="flex items-center gap-2 font-medium">
                   <span className="truncate">{u.nickname ?? '(닉네임 없음)'}</span>
                   {u.isAdmin && <Badge>관리자</Badge>}
+                  {u.isBanned && <Badge variant="destructive">광장 차단됨</Badge>}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{u.email}</p>
                 <p className="text-xs text-muted-foreground">
@@ -71,6 +73,7 @@ async function AdminContent() {
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                {!u.isAdmin && <BanButton userId={u.id} isBanned={u.isBanned} />}
                 <RoleButton
                   userId={u.id}
                   isAdmin={u.isAdmin}

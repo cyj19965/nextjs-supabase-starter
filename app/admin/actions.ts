@@ -54,6 +54,47 @@ export async function adminDeleteUser(formData: FormData) {
 }
 
 /**
+ * Bans or unbans a member from the community feed. Banned members keep
+ * their private projects; their posts are hidden (not deleted) and they
+ * cannot share or comment — enforced by RLS policies referencing the
+ * community_bans table. Admins cannot be banned.
+ */
+export async function setCommunityBan(formData: FormData) {
+  await requireAdmin();
+  const targetId = requireUserId(formData.get('userId'));
+  const ban = formData.get('ban') === 'true';
+
+  const target = (await fetchAllUsers()).find((u) => u.id === targetId);
+  if (!target) return;
+  if (ban && target.app_metadata?.role === 'admin') return;
+
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const res = ban
+    ? await fetch(`${base}/rest/v1/community_bans`, {
+        method: 'POST',
+        headers: {
+          ...serviceHeaders(),
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=ignore-duplicates',
+        },
+        body: JSON.stringify({ user_id: targetId }),
+        cache: 'no-store',
+      })
+    : await fetch(`${base}/rest/v1/community_bans?user_id=eq.${targetId}`, {
+        method: 'DELETE',
+        headers: serviceHeaders(),
+        cache: 'no-store',
+      });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`ban update failed: ${res.status} ${body}`);
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/community');
+}
+
+/**
  * Grants or revokes the admin role. Revoking the last remaining admin is
  * refused — that account can only be handled from the Supabase dashboard,
  * so the app can never reach a zero-admin state.

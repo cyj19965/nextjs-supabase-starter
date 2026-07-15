@@ -24,6 +24,36 @@ export async function getCommunityPosts(limit = 60): Promise<CommunityPost[]> {
   return data as CommunityPost[];
 }
 
+export interface PostComment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  nickname: string | null;
+  content: string;
+  created_at: string;
+}
+
+/** Comments for a set of posts, oldest-first, grouped by post. */
+export async function getCommentsForPosts(
+  postIds: string[],
+): Promise<Map<string, PostComment[]>> {
+  if (postIds.length === 0) return new Map();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('post_comments')
+    .select('*')
+    .in('post_id', postIds)
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(`post_comments select failed: ${error.message}`);
+  const grouped = new Map<string, PostComment[]>();
+  for (const comment of data as PostComment[]) {
+    const list = grouped.get(comment.post_id) ?? [];
+    list.push(comment);
+    grouped.set(comment.post_id, list);
+  }
+  return grouped;
+}
+
 /** Map of log_id -> post id for my shared logs of one project. */
 export async function getSharedPostIds(logIds: string[]): Promise<Map<string, string>> {
   if (logIds.length === 0) return new Map();

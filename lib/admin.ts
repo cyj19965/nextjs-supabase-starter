@@ -8,6 +8,7 @@ export interface AdminUser {
   createdAt: string;
   lastSignInAt: string | null;
   isAdmin: boolean;
+  isBanned: boolean;
   projectCount: number;
 }
 
@@ -44,12 +45,17 @@ export async function getAdminData(): Promise<{ users: AdminUser[]; stats: Admin
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const headers = serviceHeaders();
 
-  const [usersRes, projectsRes] = await Promise.all([
+  const [usersRes, projectsRes, bansRes] = await Promise.all([
     fetch(`${base}/auth/v1/admin/users?per_page=200`, { headers, cache: 'no-store' }),
     fetch(`${base}/rest/v1/projects?select=user_id,status`, { headers, cache: 'no-store' }),
+    fetch(`${base}/rest/v1/community_bans?select=user_id`, { headers, cache: 'no-store' }),
   ]);
   if (!usersRes.ok) throw new Error(`admin users fetch failed: ${usersRes.status}`);
   if (!projectsRes.ok) throw new Error(`projects fetch failed: ${projectsRes.status}`);
+  if (!bansRes.ok) throw new Error(`bans fetch failed: ${bansRes.status}`);
+  const bannedIds = new Set(
+    ((await bansRes.json()) as Array<{ user_id: string }>).map((b) => b.user_id),
+  );
 
   const projects = (await projectsRes.json()) as Array<{ user_id: string; status: string }>;
   const countByUser = new Map<string, number>();
@@ -64,6 +70,7 @@ export async function getAdminData(): Promise<{ users: AdminUser[]; stats: Admin
     createdAt: u.created_at,
     lastSignInAt: u.last_sign_in_at ?? null,
     isAdmin: u.app_metadata?.role === 'admin',
+    isBanned: bannedIds.has(u.id),
     projectCount: countByUser.get(u.id) ?? 0,
   }));
 

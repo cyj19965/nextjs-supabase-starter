@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DeletePostButton } from '@/components/delete-post-button';
-import { getCommunityPosts } from '@/lib/community';
+import { PostComments } from '@/components/post-comments';
+import { getCommentsForPosts, getCommunityPosts } from '@/lib/community';
 import { photoUrl } from '@/lib/projects';
 import { createClient } from '@/lib/supabase/server';
 
@@ -22,6 +23,7 @@ async function CommunityContent() {
   const myId = data.claims.sub as string;
 
   const posts = await getCommunityPosts();
+  const commentsByPost = await getCommentsForPosts(posts.map((p) => p.id));
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-5">
@@ -66,6 +68,11 @@ async function CommunityContent() {
                   </span>
                   {post.user_id === myId && <DeletePostButton postId={post.id} />}
                 </p>
+                <PostComments
+                  postId={post.id}
+                  myId={myId}
+                  comments={commentsByPost.get(post.id) ?? []}
+                />
               </figcaption>
             </figure>
           ))}
