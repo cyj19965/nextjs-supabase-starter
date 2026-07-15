@@ -94,6 +94,31 @@ export async function setCommunityBan(formData: FormData) {
   revalidatePath('/community');
 }
 
+/** Admin-tunable: likes needed for a post to enter the popular section. */
+export async function setPopularThreshold(formData: FormData) {
+  await requireAdmin();
+  const raw = formData.get('threshold');
+  const threshold = typeof raw === 'string' ? parseInt(raw, 10) : NaN;
+  if (!Number.isInteger(threshold) || threshold < 1 || threshold > 100000) return;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/community_settings?id=eq.1`,
+    {
+      method: 'PATCH',
+      headers: { ...serviceHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ popular_threshold: threshold }),
+      cache: 'no-store',
+    },
+  );
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`threshold update failed: ${res.status} ${body}`);
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/community');
+}
+
 /**
  * Grants or revokes the admin role. Revoking the last remaining admin is
  * refused — that account can only be handled from the Supabase dashboard,

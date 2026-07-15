@@ -4,7 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BanButton } from '@/components/admin/ban-button';
 import { DeleteUserButton } from '@/components/admin/delete-user-button';
 import { RoleButton } from '@/components/admin/role-button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { setPopularThreshold } from '@/app/admin/actions';
 import { getAdminData, requireAdmin } from '@/lib/admin';
+import { getPopularThreshold } from '@/lib/community';
 
 // cacheComponents mode: uncached (auth-scoped) data must render inside Suspense
 export default function AdminPage() {
@@ -21,7 +25,10 @@ function formatDate(iso: string | null): string {
 
 async function AdminContent() {
   const callerId = await requireAdmin();
-  const { users, stats } = await getAdminData();
+  const [{ users, stats }, popularThreshold] = await Promise.all([
+    getAdminData(),
+    getPopularThreshold(),
+  ]);
   const adminCount = users.filter((u) => u.isAdmin).length;
 
   const statCards: Array<[string, number]> = [
@@ -44,6 +51,29 @@ async function AdminContent() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">광장 설정</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={setPopularThreshold} className="flex flex-wrap items-center gap-2">
+            <span className="text-sm">추천</span>
+            <Input
+              name="threshold"
+              type="number"
+              min={1}
+              defaultValue={popularThreshold}
+              className="h-9 w-24 text-center"
+              aria-label="인기글 기준 추천 수"
+            />
+            <span className="text-sm">회 이상이면 🔥 인기글에 노출</span>
+            <Button type="submit" size="sm">
+              저장
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
