@@ -5,6 +5,8 @@ import type { PostComment } from '@/lib/community';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+const PREVIEW_COUNT = 3;
+
 export function PostComments({
   postId,
   myId,
@@ -14,6 +16,7 @@ export function PostComments({
   myId: string;
   comments: PostComment[];
 }) {
+  const [expanded, setExpanded] = useState(false);
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,9 +57,12 @@ export function PostComments({
     if (!error) router.refresh();
   };
 
+  const visible = expanded ? comments : comments.slice(0, PREVIEW_COUNT);
+  const hiddenCount = comments.length - PREVIEW_COUNT;
+
   return (
     <div className="space-y-2 border-t border-black/5 pt-2">
-      {comments.map((comment) => (
+      {visible.map((comment) => (
         <p key={comment.id} className="text-xs leading-relaxed">
           <span className="font-semibold">{comment.nickname ?? '어느 뜨개인'}</span>{' '}
           {comment.content}
@@ -71,23 +77,44 @@ export function PostComments({
           )}
         </p>
       ))}
-      <form onSubmit={add} className="flex items-center gap-1.5">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          maxLength={300}
-          placeholder="댓글 남기기..."
-          className="h-7 w-full rounded-full border border-black/10 bg-background px-3 text-xs focus:border-primary focus:outline-none"
-        />
+
+      {!expanded ? (
         <button
-          type="submit"
-          disabled={isSaving || !text.trim()}
-          className="shrink-0 text-xs font-semibold text-primary disabled:opacity-40"
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="text-xs text-muted-foreground hover:text-primary"
         >
-          {isSaving ? '...' : '남기기'}
+          {hiddenCount > 0 ? `💬 댓글 ${hiddenCount}개 더 보기 · 댓글 달기` : '💬 댓글 달기'}
         </button>
-      </form>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      ) : (
+        <>
+          <form onSubmit={add} className="flex items-center gap-1.5">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              maxLength={300}
+              autoFocus
+              placeholder="댓글 남기기..."
+              className="h-7 w-full rounded-full border border-black/10 bg-background px-3 text-xs focus:border-primary focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={isSaving || !text.trim()}
+              className="shrink-0 text-xs font-semibold text-primary disabled:opacity-40"
+            >
+              {isSaving ? '...' : '남기기'}
+            </button>
+          </form>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            접기
+          </button>
+        </>
+      )}
     </div>
   );
 }

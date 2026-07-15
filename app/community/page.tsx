@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,10 +17,14 @@ import { photoUrl } from '@/lib/projects';
 import { createClient } from '@/lib/supabase/server';
 
 // cacheComponents mode: uncached (auth-scoped) data must render inside Suspense
-export default function CommunityPage() {
+export default function CommunityPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   return (
     <Suspense>
-      <CommunityContent />
+      <CommunityContent searchParams={searchParams} />
     </Suspense>
   );
 }
@@ -76,7 +81,18 @@ function PostCard({
   );
 }
 
-async function CommunityContent() {
+const TABS = [
+  ['all', '전체글'],
+  ['popular', '🔥 인기글'],
+  ['latest', '✨ 최신글'],
+] as const;
+
+const LATEST_DAYS = 7;
+
+async function CommunityContent({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab: rawTab } = await searchParams;
+  const tab = rawTab === 'popular' || rawTab === 'latest' ? rawTab : 'all';
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) redirect('/auth/login');
@@ -92,24 +108,24 @@ async function CommunityContent() {
 
   const countOf = (id: string) => likeData.counts.get(id) ?? 0;
   const isPopular = (id: string) => countOf(id) >= threshold;
-  const popularPosts = posts
-    .filter((p) => isPopular(p.id))
-    .sort((a, b) => countOf(b.id) - countOf(a.id));
+  const latestCutoff = Date.now() - LATEST_DAYS * 86_400_000;
 
-  const renderCard = (post: CommunityPost) => (
-    <PostCard
-      key={post.id}
-      post={post}
-      myId={myId}
-      comments={commentsByPost.get(post.id) ?? []}
-      likeCount={countOf(post.id)}
-      liked={likeData.likedByMe.has(post.id)}
-      popular={isPopular(post.id)}
-    />
-  );
+  const shown =
+    tab === 'popular'
+      ? posts.filter((p) => isPopular(p.id)).sort((a, b) => countOf(b.id) - countOf(a.id))
+      : tab === 'latest'
+        ? posts.filter((p) => new Date(p.created_at).getTime() >= latestCutoff)
+        : posts;
+
+  const emptyMessage =
+    tab === 'popular'
+      ? `아직 인기글이 없어요. 추천 ${threshold}회를 받으면 여기 올라와요 🔥`
+      : tab === 'latest'
+        ? `최근 ${LATEST_DAYS}일 안에 공유된 글이 없어요.`
+        : '아직 공유된 기록이 없어요. 첫 번째로 자랑해보세요! 🧶';
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 p-5">
+    <div className="mx-auto w-full max-w-3xl space-y-5 p-5">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">🧺 뜨개 광장</h1>
         <p className="text-sm text-muted-foreground">
@@ -117,26 +133,43 @@ async function CommunityContent() {
         </p>
       </div>
 
-      {popularPosts.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold">🔥 인기글</h2>
-          <div className="columns-2 gap-3 sm:columns-3 [&>*]:mb-3">
-            {popularPosts.map(renderCard)}
-          </div>
-        </section>
-      )}
+      <nav className="flex flex-wrap gap-2 text-sm">
+        {TABS.map(([key, label]) => (
+          <Link
+            key={key}
+            href={key === 'all' ? '/community' : `/community?tab=${key}`}
+            className={
+              'rounded-full px-3.5 py-1 transition ' +
+              (tab === key
+                ? 'bg-primary font-semibold text-primary-foreground'
+                : 'bg-secondary hover:bg-secondary/70')
+            }
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
 
-      {posts.length === 0 ? (
+      {shown.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            아직 공유된 기록이 없어요. 첫 번째로 자랑해보세요! 🧶
+            {emptyMessage}
           </CardContent>
         </Card>
       ) : (
-        <section className="space-y-3">
-          {popularPosts.length > 0 && <h2 className="text-lg font-bold">최신글</h2>}
-          <div className="columns-2 gap-3 sm:columns-3 [&>*]:mb-3">{posts.map(renderCard)}</div>
-        </section>
+        <div className="columns-2 gap-3 sm:columns-3 [&>*]:mb-3">
+          {shown.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              myId={myId}
+              comments={commentsByPost.get(post.id) ?? []}
+              likeCount={countOf(post.id)}
+              liked={likeData.likedByMe.has(post.id)}
+              popular={isPopular(post.id)}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
