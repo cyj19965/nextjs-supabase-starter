@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DeletePostButton } from '@/components/delete-post-button';
 import { LikeButton } from '@/components/like-button';
 import { PostComments } from '@/components/post-comments';
+import { ZoomablePhoto } from '@/components/zoomable-photo';
 import {
   type CommunityPost,
   type PostComment,
@@ -46,12 +47,14 @@ function PostCard({
 }) {
   return (
     <figure className="break-inside-avoid overflow-hidden rounded-2xl border border-black/5 bg-card shadow-sm">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <ZoomablePhoto
         src={photoUrl(post.photo_path)}
         alt={post.caption ?? `${post.project_name} 사진`}
-        className="w-full object-cover"
-        loading="lazy"
+        projectName={post.project_name}
+        rowsAt={post.rows_at}
+        nickname={post.nickname}
+        caption={post.caption}
+        createdAt={post.created_at}
       />
       <figcaption className="space-y-1 p-3">
         <div className="flex items-start justify-between gap-2">

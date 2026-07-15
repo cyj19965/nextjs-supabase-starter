@@ -9,6 +9,7 @@ import { ShareLogButton } from '@/components/share-log-button';
 import { getSharedPostIds } from '@/lib/community';
 import { PhotoLogForm } from '@/components/photo-log-form';
 import { RowCounter } from '@/components/row-counter';
+import { ZoomablePhoto } from '@/components/zoomable-photo';
 import { PROJECT_STATUSES, getProject, getProjectLogs, photoUrl } from '@/lib/projects';
 import { createClient } from '@/lib/supabase/server';
 import { deleteProject, setGoal, setRows, setStatus } from '../actions';
@@ -176,13 +177,18 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {logs.map((log) => (
                 <figure key={log.id} className="space-y-1.5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photoUrl(log.photo_path)}
-                    alt={log.caption ?? '뜨개 기록 사진'}
-                    className="aspect-square w-full rounded-xl object-cover"
-                    loading="lazy"
-                  />
+                  <div className="aspect-square overflow-hidden rounded-xl">
+                    <ZoomablePhoto
+                      src={photoUrl(log.photo_path)}
+                      alt={log.caption ?? '뜨개 기록 사진'}
+                      projectName={project.name}
+                      rowsAt={log.rows_at}
+                      nickname={null}
+                      caption={log.caption}
+                      createdAt={log.created_at}
+                      thumbClassName="h-full w-full object-cover"
+                    />
+                  </div>
                   <figcaption className="space-y-0.5 px-0.5">
                     {log.caption && <p className="text-sm leading-snug">{log.caption}</p>}
                     <p className="flex items-center justify-between text-xs text-muted-foreground">
