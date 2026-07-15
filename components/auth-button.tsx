@@ -17,6 +17,9 @@ export async function AuthButton() {
 
   return user ? (
     <div className="flex min-w-0 items-center gap-3">
+      <Link href="/community" className="shrink-0 text-sm font-medium hover:underline">
+        🧺 광장
+      </Link>
       {admin && (
         <Link
           href="/admin"

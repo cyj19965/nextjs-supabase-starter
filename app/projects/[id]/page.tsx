@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { DeleteLogButton } from '@/components/delete-log-button';
+import { ShareLogButton } from '@/components/share-log-button';
+import { getSharedPostIds } from '@/lib/community';
 import { GoalCelebration } from '@/components/goal-celebration';
 import { PhotoLogForm } from '@/components/photo-log-form';
 import { ProgressBar } from '@/components/progress-bar';
@@ -29,6 +31,7 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
   if (error || !data?.claims) redirect('/auth/login');
 
   const [project, logs] = await Promise.all([getProject(id), getProjectLogs(id)]);
+  const sharedPostIds = await getSharedPostIds(logs.map((l) => l.id));
   // Stale links (e.g. a tab left open after deletion) get a friendly notice
   // instead of a bare 404. RLS also lands here for other users' projects.
   if (!project) {
@@ -222,7 +225,17 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
                         )}
                         {log.created_at.slice(0, 10)}
                       </span>
-                      <DeleteLogButton logId={log.id} photoPath={log.photo_path} />
+                      <span className="flex items-center gap-2">
+                        <ShareLogButton
+                          logId={log.id}
+                          projectName={project.name}
+                          photoPath={log.photo_path}
+                          caption={log.caption}
+                          rowsAt={log.rows_at}
+                          postId={sharedPostIds.get(log.id) ?? null}
+                        />
+                        <DeleteLogButton logId={log.id} photoPath={log.photo_path} />
+                      </span>
                     </p>
                   </figcaption>
                 </figure>
