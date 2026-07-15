@@ -7,12 +7,11 @@ import { Input } from '@/components/ui/input';
 import { DeleteLogButton } from '@/components/delete-log-button';
 import { ShareLogButton } from '@/components/share-log-button';
 import { getSharedPostIds } from '@/lib/community';
-import { GoalCelebration } from '@/components/goal-celebration';
 import { PhotoLogForm } from '@/components/photo-log-form';
-import { ProgressBar } from '@/components/progress-bar';
-import { PROJECT_STATUSES, getProject, getProjectLogs, photoUrl, progressOf } from '@/lib/projects';
+import { RowCounter } from '@/components/row-counter';
+import { PROJECT_STATUSES, getProject, getProjectLogs, photoUrl } from '@/lib/projects';
 import { createClient } from '@/lib/supabase/server';
-import { adjustRows, deleteProject, setGoal, setRows, setStatus } from '../actions';
+import { deleteProject, setGoal, setRows, setStatus } from '../actions';
 import { Suspense } from 'react';
 
 // cacheComponents mode: uncached (auth-scoped) data must render inside Suspense
@@ -58,8 +57,6 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
     );
   }
 
-  const goalReached = !!(project.goal_rows && project.current_rows >= project.goal_rows);
-
   const facts: Array<[string, string]> = [];
   if (project.kind) facts.push(['종류', project.kind]);
   if (project.yarn) facts.push(['실', project.yarn]);
@@ -82,43 +79,14 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <GoalCelebration projectId={project.id} reached={goalReached} />
-          {/* Counter — the heart of the app */}
-          <div className="space-y-3 rounded-3xl bg-secondary/60 p-6 text-center">
-            <p className="text-sm text-muted-foreground">현재 단수</p>
-            <p className="text-7xl font-extrabold tabular-nums text-primary">
-              {project.current_rows}
-            </p>
-            {project.goal_rows && (
-              <p className="text-sm text-muted-foreground">목표 {project.goal_rows}단</p>
-            )}
-            <div className="flex items-center justify-center gap-3">
-              <form action={adjustRows}>
-                <input type="hidden" name="id" value={project.id} />
-                <input type="hidden" name="delta" value="-1" />
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="lg"
-                  className="h-14 w-14 rounded-full text-lg"
-                  aria-label="1단 빼기"
-                >
-                  −1
-                </Button>
-              </form>
-              <form action={adjustRows}>
-                <input type="hidden" name="id" value={project.id} />
-                <input type="hidden" name="delta" value="1" />
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="h-14 rounded-full px-12 text-xl font-bold shadow-md transition active:scale-95"
-                >
-                  +1단 🧶
-                </Button>
-              </form>
-            </div>
-            <form action={setRows} className="mx-auto flex max-w-56 items-center gap-2 pt-1">
+          {/* Counter — the heart of the app (optimistic, direct-to-Supabase) */}
+          <RowCounter
+            projectId={project.id}
+            initialRows={project.current_rows}
+            goalRows={project.goal_rows}
+          />
+          <div className="space-y-2">
+            <form action={setRows} className="mx-auto flex max-w-56 items-center gap-2">
               <input type="hidden" name="id" value={project.id} />
               <Input
                 name="rows"
@@ -146,7 +114,6 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
                 목표 수정
               </Button>
             </form>
-            <ProgressBar percent={progressOf(project)} />
           </div>
 
           {facts.length > 0 && (
