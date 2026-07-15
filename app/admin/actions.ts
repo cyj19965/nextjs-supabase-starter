@@ -94,6 +94,40 @@ export async function setCommunityBan(formData: FormData) {
   revalidatePath('/community');
 }
 
+/** Marks a report handled (keeps it in the list as history). */
+export async function resolveReport(formData: FormData) {
+  await requireAdmin();
+  const id = formData.get('reportId');
+  if (typeof id !== 'string' || !/^[0-9a-f-]{36}$/.test(id)) return;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/post_reports?id=eq.${id}`,
+    {
+      method: 'PATCH',
+      headers: { ...serviceHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: '처리됨' }),
+      cache: 'no-store',
+    },
+  );
+  if (!res.ok) throw new Error(`report resolve failed: ${res.status}`);
+  revalidatePath('/admin');
+}
+
+/** Deletes the reported post (cascades its reports/likes/comments away). */
+export async function deleteReportedPost(formData: FormData) {
+  await requireAdmin();
+  const postId = formData.get('postId');
+  if (typeof postId !== 'string' || !/^[0-9a-f-]{36}$/.test(postId)) return;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/community_posts?id=eq.${postId}`,
+    { method: 'DELETE', headers: serviceHeaders(), cache: 'no-store' },
+  );
+  if (!res.ok) throw new Error(`reported post delete failed: ${res.status}`);
+  revalidatePath('/admin');
+  revalidatePath('/community');
+}
+
 /** Admin-tunable: likes needed for a post to enter the popular section. */
 export async function setPopularThreshold(formData: FormData) {
   await requireAdmin();

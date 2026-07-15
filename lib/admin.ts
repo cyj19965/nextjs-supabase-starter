@@ -83,3 +83,52 @@ export async function getAdminData(): Promise<{ users: AdminUser[]; stats: Admin
     },
   };
 }
+
+export interface AdminReport {
+  id: string;
+  postId: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+  reporterNickname: string | null;
+  postNickname: string | null;
+  postProjectName: string | null;
+  postCaption: string | null;
+  postPhotoPath: string | null;
+}
+
+/** Pending reports first, each joined with reporter and post context. */
+export async function getReports(): Promise<AdminReport[]> {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const headers = serviceHeaders();
+
+  const [reportsRes, usersRes] = await Promise.all([
+    fetch(
+      `${base}/rest/v1/post_reports?select=*,community_posts(user_id,nickname,project_name,caption,photo_path)&order=status.asc,created_at.desc`,
+      { headers, cache: 'no-store' },
+    ),
+    fetch(`${base}/auth/v1/admin/users?per_page=200`, { headers, cache: 'no-store' }),
+  ]);
+  if (!reportsRes.ok) throw new Error(`reports fetch failed: ${reportsRes.status}`);
+  if (!usersRes.ok) throw new Error(`users fetch failed: ${usersRes.status}`);
+
+  const nicknameById = new Map<string, string | null>(
+    ((await usersRes.json()) as any).users.map((u: any) => [
+      u.id,
+      u.user_metadata?.nickname ?? null,
+    ]),
+  );
+
+  return ((await reportsRes.json()) as any[]).map((r) => ({
+    id: r.id,
+    postId: r.post_id,
+    reason: r.reason,
+    status: r.status,
+    createdAt: r.created_at,
+    reporterNickname: nicknameById.get(r.reporter_id) ?? null,
+    postNickname: r.community_posts?.nickname ?? null,
+    postProjectName: r.community_posts?.project_name ?? null,
+    postCaption: r.community_posts?.caption ?? null,
+    postPhotoPath: r.community_posts?.photo_path ?? null,
+  }));
+}

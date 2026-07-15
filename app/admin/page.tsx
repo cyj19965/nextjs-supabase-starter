@@ -3,12 +3,14 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BanButton } from '@/components/admin/ban-button';
 import { DeleteUserButton } from '@/components/admin/delete-user-button';
+import { ReportActions } from '@/components/admin/report-actions';
 import { RoleButton } from '@/components/admin/role-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { setPopularThreshold } from '@/app/admin/actions';
-import { getAdminData, requireAdmin } from '@/lib/admin';
+import { getAdminData, getReports, requireAdmin } from '@/lib/admin';
 import { getPopularThreshold } from '@/lib/community';
+import { photoUrl } from '@/lib/projects';
 
 // cacheComponents mode: uncached (auth-scoped) data must render inside Suspense
 export default function AdminPage() {
@@ -25,11 +27,13 @@ function formatDate(iso: string | null): string {
 
 async function AdminContent() {
   const callerId = await requireAdmin();
-  const [{ users, stats }, popularThreshold] = await Promise.all([
+  const [{ users, stats }, popularThreshold, reports] = await Promise.all([
     getAdminData(),
     getPopularThreshold(),
+    getReports(),
   ]);
   const adminCount = users.filter((u) => u.isAdmin).length;
+  const pendingReports = reports.filter((r) => r.status === '대기').length;
 
   const statCards: Array<[string, number]> = [
     ['전체 회원', stats.userCount],
@@ -51,6 +55,60 @@ async function AdminContent() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            🚨 신고 게시물
+            {pendingReports > 0 && <Badge variant="destructive">대기 {pendingReports}</Badge>}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {reports.length === 0 ? (
+            <p className="text-sm text-muted-foreground">접수된 신고가 없어요.</p>
+          ) : (
+            reports.map((r) => (
+              <div
+                key={r.id}
+                className={
+                  'flex flex-wrap items-start gap-3 rounded-xl border p-3 ' +
+                  (r.status === '대기' ? 'border-destructive/30' : 'opacity-60')
+                }
+              >
+                {r.postPhotoPath ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photoUrl(r.postPhotoPath)}
+                    alt=""
+                    className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground">
+                    삭제됨
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    사유: {r.reason}
+                    {r.status === '처리됨' && <Badge variant="secondary">처리됨</Badge>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    신고자 {r.reporterNickname ?? '익명'} · {r.createdAt.slice(0, 10)}
+                    {r.postProjectName && ` · 대상: ${r.postNickname ?? '?'}의 ${r.postProjectName}`}
+                  </p>
+                  {r.status === '대기' && (
+                    <ReportActions
+                      reportId={r.id}
+                      postId={r.postId}
+                      postExists={!!r.postPhotoPath}
+                    />
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

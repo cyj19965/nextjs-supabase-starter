@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DeletePostButton } from '@/components/delete-post-button';
 import { LikeButton } from '@/components/like-button';
 import { PostComments } from '@/components/post-comments';
+import { ReportButton } from '@/components/report-button';
 import { ZoomablePhoto } from '@/components/zoomable-photo';
 import {
   type CommunityPost,
@@ -76,7 +77,11 @@ function PostCard({
           <span>
             {post.nickname ?? '어느 뜨개인'} · {post.created_at.slice(0, 10)}
           </span>
-          {post.user_id === myId && <DeletePostButton postId={post.id} />}
+          {post.user_id === myId ? (
+            <DeletePostButton postId={post.id} />
+          ) : (
+            <ReportButton postId={post.id} />
+          )}
         </p>
         <PostComments postId={post.id} myId={myId} comments={comments} />
       </figcaption>
